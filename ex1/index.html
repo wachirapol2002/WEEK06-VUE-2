@@ -101,7 +101,7 @@
             <div id='ex2'>
 
                 <!-- ปุ่ม Add Student------------------- -->
-                <a class="button is-primary">Add Student</a>
+                <a class="button is-primary" @click="addStudent()">Add Student</a>
 
                 <div>
                     <table class="table">
@@ -114,12 +114,12 @@
                         </thead>
                         <tbody>
                             <!-- ตัวอย่างข้อมูล------------ -->
-                            <tr>
-                                <td>นายxxxxx yyyyy</td>
-                                <td>99</td>
+                            <tr v-for="(person, index) in students">
+                                <td>{{person.prename+person.fname+" "+person.lname}}</td>
+                                <td>{{person.score}}</td>
                                 <td>
                                     <!-- ปุ่ม Delete------------------- -->
-                                    <a class="button is-danger">Delete</a>
+                                    <a class="button is-danger" @click="removeStudent(index)">Delete</a>
                                 </td>
                             </tr>
 
@@ -168,14 +168,15 @@
                             <th class="is-warning">sum</th>
                             <td>
                                 <!-- แสดงผลรวมคะแนนที่นี้ -->
-                                120
+                                {{sumScore}}
+                               
                             </td>
                         </tr>
                         <tr>
                             <th class="is-primary">avarage</th>
                             <td>
                                 <!-- แสดงค่าเฉลี่ยที่นี่ -->
-                                12.3
+                                {{averageScore}}
                             </td>
                         </tr>
                     </tbody>
@@ -213,15 +214,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>50</td>
-                            <td>48.5</td>
-                            <td style="color : red">- 1.5</td>
-                        </tr>
-                        <tr>
-                            <td>48.5</td>
-                            <td>55</td>
-                            <td style="color : green">+ 6.5</td>
+                        <tr v-for="log in logs">
+                            <td>{{log.change}}</td>
+                            <td>{{log.from}}</td>
+                            <td :style="log.different > 0 ? 'color:green' : 'color:red'">{{parseFloat(log.different).toFixed(2)}}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -239,7 +235,7 @@
                     <div class="columns">
                     <div class="column">
                     <p class="control has-icons-left">
-                            <input class="input" type="text" placeholder="Name Search by Watchers">
+                            <input v-model="search" class="input" type="text" placeholder="Name Search by Watchers">
                       <span class="icon is-small is-left">
                         <i class="fa fa-search"></i>
                       </span>
@@ -258,7 +254,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="(item, index) in dummyData"  :key="index">
+                        <tr v-for="(item, index) in searchData"  :key="index">
                             <td>{{item.first_name}}</td>
                             <td>{{item.last_name}}</td>
                             <td>{{item.email}}</td>
@@ -277,7 +273,7 @@
                 <div style="display: flex; justify-content: flex-end;" class="my-2">
                     <div class="control has-icons-left">
                         <div class="select">
-                          <select>
+                          <select v-model="gender">
                             <option></option>
                             <option>Male</option>
                             <option>Female</option>
@@ -303,7 +299,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="(item, index) in dummyData"  :key="index">
+                        <tr v-for="(item, index) in computeGender"  :key="index">
                             <td>{{item.first_name}}</td>
                             <td>{{item.last_name}}</td>
                             <td>{{item.email}}</td>
@@ -325,9 +321,73 @@
             data: {
                 message: 'Hello Vue!',
                 students: [],
+                prename: "",
+                fname:"",
+                lname:"",
+                score:"",
                 logs: [],
                 dummyData: dummyData,
+                searchData: dummyData,
+                gender:"",
+                search:""
             },
+            methods:{
+                addStudent() {
+                    if (this.prename == "" || this.fname == "" || this.lname == "" || this.score == "") {
+                        alert("Please enter all inputs");
+                    }
+                    else if (this.score > 100 || this.score < 0) {
+                        alert("Score is incorrect");
+                    }
+                    else{
+                        this.students.push({
+                            prename:this.prename,
+                            fname:this.fname,
+                            lname:this.lname,
+                            score:this.score
+                        })
+                        this.prename = "";
+                        this.fname = "";
+                        this.lname = "";
+                        this.score = "";
+                    }
+
+                },
+                removeStudent(index) {
+                    this.students.splice(index, 1)
+                },
+            },
+            computed: {
+                sumScore() {
+                    return this.students.reduce(function (sum, student) {
+                        return sum + parseInt(student.score)
+                    }, 0)
+                },
+                averageScore() {
+                    return (this.sumScore / this.students.length | 0.00).toFixed(2)
+                },
+                computeGender(){
+                    return this.dummyData.filter(person => {
+                        return person.gender === this.gender || !this.gender
+                    })
+                }
+            },
+            watch: {
+                averageScore(newVal, oldVal) {
+                    console.log(this.averageScore)
+                    this.logs.push({
+                        change: newVal,
+                        from: oldVal,
+                        different: newVal - oldVal
+                    });
+                },
+                search(currentSearch, previousSearch) {
+                    this.searchData = this.dummyData.filter((item) => {
+                        return (item.first_name.includes(currentSearch) || item.last_name.includes(currentSearch) || currentSearch == "")
+                    })
+                },
+            },
+            
         })
     </script>
 
